@@ -63,6 +63,7 @@ protected:  //vars
     U64 mCurrentSample;
     std::vector<U32> mHighSpeedSampleOffsets;
     std::vector<U32> mLowSpeedSampleOffsets;
+    U32 mTimeoutSampleNum;
 
 #pragma warning( pop )
 };

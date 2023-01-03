@@ -149,6 +149,8 @@ void SWIMAnalyzer::SetupSample()
     {
         mLowSpeedSampleOffsets.push_back(clk_gen.AdvanceByHalfPeriod());
     }
+
+    mTimeoutSampleNum = clk_gen.AdvanceByTimeS(5e-4); // Set bit timeout 0.5ms
 }
 
 void SWIMAnalyzer::ParseSWIM(bool is_high_speed)
@@ -457,7 +459,11 @@ BitState SWIMAnalyzer::ParseBit(bool is_high_speed)
         }
     }
     
-    mSWIM->AdvanceToNextEdge();
+    if ((mSWIM->GetSampleOfNextEdge() - mSWIM->GetSampleNumber()) < mTimeoutSampleNum)
+    {
+        // Next bit present
+        mSWIM->AdvanceToNextEdge();
+    }
     return bit;
 }
 
@@ -469,7 +475,15 @@ BitState SWIMAnalyzer::ParseACK(bool is_high_speed)
 
     if (mSWIM->GetBitState() == BIT_HIGH)
     {
-        mSWIM->AdvanceToNextEdge();
+        if ((mSWIM->GetSampleOfNextEdge() - mSWIM->GetSampleNumber()) < mTimeoutSampleNum)
+        {
+            mSWIM->AdvanceToNextEdge();
+        }
+        else
+        {
+            // ACK edge not present
+            return BIT_LOW;
+        }
     }
     U64 starting_sample = mSWIM->GetSampleNumber();
 
